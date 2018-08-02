@@ -27,7 +27,12 @@ FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 SET(PLATFORM_LIBRARIES)
 
-if( APPLE )
+IF( WIN32 )
+  message( STATUS "Configuring ChainBase on Windows" )
+  # win32 Specific Options Here
+  add_definitions(-DBOOST_USE_WINDOWS_H)
+  add_definitions(-DNOMINMAX)
+elseif( APPLE )
   # Apple Specific Options Here
   message( STATUS "Configuring ChainBase on OS X" )
   set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wno-conversion" )

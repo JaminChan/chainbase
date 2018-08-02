@@ -3,7 +3,9 @@
 
 #include <iostream>
 
+#ifndef WIN32
 #include <sys/mman.h>
+#endif
 
 namespace chainbase {
 
@@ -38,13 +40,20 @@ namespace chainbase {
       bool write = flags & database::read_write;
 
       if (!bfs::exists(dir)) {
-         if(!write) BOOST_THROW_EXCEPTION( std::runtime_error( "database file not found at " + dir.native() ) );
+         if(!write) BOOST_THROW_EXCEPTION( std::runtime_error( "database file not found at " + bfs::path(dir).make_preferred().string() ) );
       }
 
       bfs::create_directories(dir);
 
       _data_dir = dir;
       auto abs_path = bfs::absolute( dir / "shared_memory.bin" );
+
+	  boost::interprocess::permissions perm;
+#ifdef WIN32
+	  perm.set_unrestricted();
+#elif
+	  perm.set_permissions(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+#endif
 
       if( bfs::exists( abs_path ) )
       {
@@ -109,7 +118,7 @@ namespace chainbase {
       } else {
          _segment.reset( new bip::managed_mapped_file( bip::create_only,
                                                        abs_path.generic_string().c_str(), shared_file_size,
-                                                       0, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
+                                                       0, perm
                                                        ) );
          _segment->find_or_construct< environment_check >( "environment" )();
 
@@ -142,7 +151,7 @@ namespace chainbase {
       {
          _meta.reset( new bip::managed_mapped_file( bip::create_only,
                                                     abs_path.generic_string().c_str(), sizeof( read_write_mutex_manager ) * 2,
-                                                    0, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
+                                                    0, perm
                                                     ) );
 
          _rw_manager = _meta->find_or_construct< read_write_mutex_manager >( "rw_manager" )();
