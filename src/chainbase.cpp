@@ -51,7 +51,7 @@ namespace chainbase {
 	  boost::interprocess::permissions perm;
 #ifdef WIN32
 	  perm.set_unrestricted();
-#elif
+#else
 	  perm.set_permissions(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 #endif
 
